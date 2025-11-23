@@ -1,0 +1,41 @@
+﻿version: "3.8"
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: shopdb
+      POSTGRES_USER: shopuser
+      POSTGRES_PASSWORD: shoppass
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+  backend:
+    build: ./backend
+    environment:
+      - DATABASE_URL=postgres://shopuser:shoppass@db:5432/shopdb
+      - REDIS_URL=redis://redis:6379
+      - LANK_API_URL=http://lank.example/api
+      - LANK_API_KEY=change_me
+      - BASE_URL=http://localhost:4000
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+  frontend:
+    build: ./frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:4000/api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+volumes:
+  db_data:
